@@ -108,7 +108,7 @@
 
         ohMyZsh = {
           enable = true;
-          plugins = [ "git" "vi-mode" "z" "direnv" ];
+          plugins = [ "git" "z" "direnv" ];
           extraConfig = ''
             # Update settings
             zstyle ':omz:update' mode auto
@@ -135,6 +135,10 @@
         ];
 
         initExtra = ''
+          # Enable vi mode
+          bindkey -v
+          export KEYTIMEOUT=1
+          
           # History substring search highlighting
           HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND='bg=green,fg=white,bold'
           HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='bg=red,fg=white,bold'
