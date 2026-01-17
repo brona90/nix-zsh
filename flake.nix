@@ -252,6 +252,8 @@
 
         # Export the config for home-manager to use
         lib.zshConfig = mkZshConfig pkgs;
+
+        formatter = pkgs.nixfmt;
       }
     ) // {
       # Make mkZshConfig available to home-manager
