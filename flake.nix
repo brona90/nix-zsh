@@ -6,7 +6,12 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+    }:
     let
       # These can be imported by home-manager
       mkZshConfig = pkgs: {
@@ -108,14 +113,18 @@
 
         ohMyZsh = {
           enable = true;
-          plugins = [ "git" "z" "direnv" ];
+          plugins = [
+            "git"
+            "z"
+            "direnv"
+          ];
           extraConfig = ''
             # Update settings
             zstyle ':omz:update' mode auto
-            
+
             # Enable command auto-correction
             ENABLE_CORRECTION="true"
-            
+
             # Completion waiting dots
             COMPLETION_WAITING_DOTS="true"
           '';
@@ -138,17 +147,17 @@
           # Enable vi mode
           bindkey -v
           export KEYTIMEOUT=1
-          
+
           # History substring search highlighting
           HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND='bg=green,fg=white,bold'
           HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='bg=red,fg=white,bold'
-          
+
           # History substring search keybindings
           bindkey '^[[A' history-substring-search-up
           bindkey '^[[B' history-substring-search-down
           bindkey -M vicmd 'k' history-substring-search-up
           bindkey -M vicmd 'j' history-substring-search-down
-          
+
           # Environment variables
           export EDITOR='emacs -nw'
         '';
@@ -159,40 +168,40 @@
       };
 
     in
-    flake-utils.lib.eachDefaultSystem (system:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = import nixpkgs { inherit system; };
         config = mkZshConfig pkgs;
 
         # Build a standalone zshrc from the config
-        aliasesText = pkgs.lib.concatStringsSep "\n" 
-          (pkgs.lib.mapAttrsToList (name: value: "alias ${name}='${value}'") config.aliases);
+        aliasesText = pkgs.lib.concatStringsSep "\n" (
+          pkgs.lib.mapAttrsToList (name: value: "alias ${name}='${value}'") config.aliases
+        );
 
         zshConfig = pkgs.writeText "zshrc" ''
           # Oh-My-Zsh configuration
           export ZSH="${pkgs.oh-my-zsh}/share/oh-my-zsh"
-          
+
           ${config.ohMyZsh.extraConfig}
-          
+
           # Plugins
           plugins=(${pkgs.lib.concatStringsSep " " config.ohMyZsh.plugins})
-          
+
           source $ZSH/oh-my-zsh.sh
-          
+
           # Zsh plugins from nixpkgs
-          ${pkgs.lib.concatMapStringsSep "\n" 
-            (plugin: "source ${plugin.src}/${plugin.file}") 
-            config.plugins}
-          
+          ${pkgs.lib.concatMapStringsSep "\n" (plugin: "source ${plugin.src}/${plugin.file}") config.plugins}
+
           # Starship prompt
           eval "$(${pkgs.starship}/bin/starship init zsh)"
-          
+
           # Mise activation
           eval "$(${pkgs.mise}/bin/mise activate zsh)"
-          
+
           # Custom aliases
           ${aliasesText}
-          
+
           ${config.initExtra}
         '';
 
@@ -200,12 +209,12 @@
         zshWrapper = pkgs.writeShellScriptBin "zsh-with-config" ''
           export ZDOTDIR="$HOME/.config/zsh"
           mkdir -p "$ZDOTDIR"
-          
+
           # Link config if not exists or outdated
           if [ ! -f "$ZDOTDIR/.zshrc" ] || [ "$(readlink -f "$ZDOTDIR/.zshrc")" != "${zshConfig}" ]; then
             ln -sf ${zshConfig} "$ZDOTDIR/.zshrc"
           fi
-          
+
           exec ${pkgs.zsh}/bin/zsh "$@"
         '';
 
@@ -255,7 +264,8 @@
 
         formatter = pkgs.nixfmt;
       }
-    ) // {
+    )
+    // {
       # Make mkZshConfig available to home-manager
       lib.mkZshConfig = mkZshConfig;
     };
