@@ -160,6 +160,21 @@
 
           # Environment variables
           export EDITOR='emacs -nw'
+
+          # Ensure nix-profile PATH takes precedence over mise
+          # Mise rewrites PATH on each prompt, so we must run AFTER mise's hook
+          __ensure_nix_path() {
+            local nix_bin="$HOME/.nix-profile/bin"
+            # Only act if nix-profile exists and isn't already first in PATH
+            if [[ -d "$nix_bin" && "$PATH" != "$nix_bin:"* ]]; then
+              # Remove nix-profile from wherever it is and prepend it
+              export PATH="$nix_bin:''${PATH//$nix_bin:/}"
+            fi
+          }
+          # Append to precmd_functions so it runs AFTER mise's _mise_hook_precmd
+          precmd_functions+=(__ensure_nix_path)
+          # Also run once now for the initial prompt
+          __ensure_nix_path
         '';
 
         sessionVariables = {
